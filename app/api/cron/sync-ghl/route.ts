@@ -27,7 +27,6 @@ const BRANDS: BrandConfig[] = [
   },
 ]
 
-// Only sync conversations updated in the last 10 minutes (or 5 min for cron cadence)
 const SYNC_WINDOW_MS = 10 * 60 * 1000
 
 export async function GET(req: NextRequest) {
@@ -36,9 +35,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const url = new URL(req.url)
+  const bulk = url.searchParams.get('bulk') === 'true'
+
   const supabase = createServiceClient()
   const now = Date.now()
-  const cutoff = now - SYNC_WINDOW_MS
+  // bulk=true fetches all 50 most recent regardless of age; normal cron uses 10-min window
+  const cutoff = bulk ? 0 : now - SYNC_WINDOW_MS
   const results: Record<string, { conversations: number; messages: number; errors: string[] }> = {}
 
   for (const brand of BRANDS) {
