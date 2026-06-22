@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { TopNav } from '@/components/inbox/TopNav'
+import { Sidebar } from '@/components/inbox/Sidebar'
+import { ConversationList } from '@/components/inbox/ConversationList'
 import type { BrandId, Channel } from '@/lib/constants'
 
 export default function InboxPage() {
@@ -17,13 +19,26 @@ export default function InboxPage() {
         onBrandChange={setSelectedBrand}
       />
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar placeholder — replaced in Task 15 */}
-        <div id="sidebar-placeholder" className="w-48 border-r bg-white shrink-0" />
-        {/* ConversationList placeholder — replaced in Task 16 */}
-        <div id="conversation-list-placeholder" className="w-80 border-r bg-white shrink-0" />
+        <Sidebar
+          selectedBrand={selectedBrand}
+          onBrandChange={setSelectedBrand}
+          selectedChannel={selectedChannel}
+          onChannelChange={setSelectedChannel}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+        />
+        <ConversationList
+          brand={selectedBrand}
+          channel={selectedChannel}
+          status={selectedStatus}
+          selectedId={selectedConversationId}
+          onSelect={setSelectedConversationId}
+        />
         {/* ThreadPane placeholder — replaced in Task 17 */}
-        <div id="thread-pane-placeholder" className="flex-1 bg-gray-50 flex items-center justify-center text-gray-400 text-sm">
-          Select a conversation
+        <div className="flex-1 bg-gray-50 flex items-center justify-center text-gray-400 text-sm">
+          {selectedConversationId
+            ? 'Loading conversation...'
+            : 'Select a conversation to get started'}
         </div>
       </div>
     </div>
