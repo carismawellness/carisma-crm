@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { fetchGhlConversations, fetchGhlMessages } from '@/lib/ghl/client'
+import { fetchGhlConversations } from '@/lib/ghl/client'
 import { resolveChannelFromGhl } from '@/lib/ghl/normalizer'
 
 interface BrandConfig {
@@ -94,39 +94,8 @@ export async function GET(req: NextRequest) {
           }
 
           brandResult.conversations++
-
-          // Sync the last 20 messages for this conversation
-          try {
-            const messages = await fetchGhlMessages(brand.apiKey, conv.id, 20)
-
-            for (const msg of messages) {
-              // Skip system/activity messages
-              if (
-                msg.messageType?.includes('ACTIVITY') ||
-                msg.messageType?.includes('CALL') ||
-                !msg.body?.trim()
-              ) continue
-
-              await supabase.from('crm_messages').upsert(
-                {
-                  conversation_id: upserted.id,
-                  ghl_message_id: msg.id,
-                  direction: msg.direction === 'inbound' ? 'inbound' : 'outbound',
-                  body: msg.body ?? '',
-                  sent_at: msg.dateAdded ?? nowIso,
-                  sender_name: msg.direction === 'inbound'
-                    ? (conv.fullName ?? conv.contactName ?? 'Unknown')
-                    : 'Agent',
-                  channel_metadata: msg,
-                },
-                { onConflict: 'ghl_message_id', ignoreDuplicates: true }
-              )
-
-              brandResult.messages++
-            }
-          } catch (msgErr) {
-            brandResult.errors.push(`msgs ${conv.id}: ${String(msgErr)}`)
-          }
+          // Messages are fetched live from GHL when an agent opens a conversation
+          // (see /api/conversations/[id]/route.ts) — no per-conversation message sync here
         } catch (convErr) {
           brandResult.errors.push(`conv ${conv.id}: ${String(convErr)}`)
         }
