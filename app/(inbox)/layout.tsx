@@ -11,7 +11,7 @@ export default async function InboxLayout({
   if (!user) redirect('/login')
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
+    <div className="h-screen flex flex-col overflow-hidden bg-mesh-light dark:bg-mesh-dark">
       {children}
     </div>
   )

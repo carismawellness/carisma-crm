@@ -7,7 +7,7 @@ vi.mock('../actions', () => ({ login: vi.fn(), logout: vi.fn() }))
 describe('LoginPage', () => {
   it('renders email and password fields', () => {
     render(<LoginPage />)
-    expect(screen.getByPlaceholderText('Email')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Email address')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Password')).toBeInTheDocument()
   })
 

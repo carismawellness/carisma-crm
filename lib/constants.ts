@@ -40,13 +40,6 @@ export const CHANNEL_LABELS: Record<Channel, string> = {
   gmail: 'Gmail',
 }
 
-export const CHANNEL_ICONS: Record<Channel, string> = {
-  whatsapp: '💬',
-  instagram: '📸',
-  facebook: '👍',
-  gmail: '📧',
-}
-
 export const XP = {
   CONVERSATION_CLOSED: 30,
   FAST_REPLY_LIGHTNING: 20,
