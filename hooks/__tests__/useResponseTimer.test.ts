@@ -28,8 +28,8 @@ describe('useResponseTimer', () => {
   it('returns null when waitingSince becomes null', () => {
     const past = new Date(Date.now() - 1000).toISOString()
     const { result, rerender } = renderHook(
-      ({ ws }) => useResponseTimer(ws),
-      { initialProps: { ws: past } }
+      ({ ws }: { ws: string | null }) => useResponseTimer(ws),
+      { initialProps: { ws: past as string | null } }
     )
     expect(result.current).not.toBeNull()
     rerender({ ws: null })
