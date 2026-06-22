@@ -9,7 +9,6 @@ import { BRANDS, CHANNEL_LABELS } from '@/lib/constants'
 import type { BrandId, Channel } from '@/lib/constants'
 import { CHANNEL_SVG_ICONS } from '@/lib/channel-icons'
 import { MessageCircle, Lock } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Props {
@@ -18,9 +17,9 @@ interface Props {
 }
 
 const STATUS_STYLE = {
-  open: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  pending: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-  closed: 'bg-muted text-muted-foreground',
+  open: { background: 'rgba(79,114,86,0.12)', color: '#4f7256' },
+  pending: { background: 'rgba(151,128,99,0.12)', color: '#978063' },
+  closed: { background: 'rgba(40,55,44,0.08)', color: '#8eb093' },
 } as const
 
 export function ThreadPane({ conversationId, onConversationClosed }: Props) {
@@ -39,8 +38,11 @@ export function ThreadPane({ conversationId, onConversationClosed }: Props) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-3"
         >
-          <div className="w-14 h-14 rounded-3xl glass mx-auto flex items-center justify-center">
-            <MessageCircle className="w-6 h-6 text-muted-foreground/40" />
+          <div
+            className="w-14 h-14 rounded-3xl mx-auto flex items-center justify-center"
+            style={{ background: 'rgba(2,76,39,0.08)', border: '1px solid rgba(40,55,44,0.12)' }}
+          >
+            <MessageCircle className="w-6 h-6" style={{ color: '#8eb093' }} />
           </div>
           <div className="space-y-1">
             <p className="text-[14px] font-medium text-foreground/40">No conversation selected</p>
@@ -52,7 +54,6 @@ export function ThreadPane({ conversationId, onConversationClosed }: Props) {
   }
 
   const brand = BRANDS[conversation.brand_id as BrandId]
-  const statusKey = conversation.status as keyof typeof STATUS_STYLE
 
   return (
     <AnimatePresence mode="wait">
@@ -65,15 +66,27 @@ export function ThreadPane({ conversationId, onConversationClosed }: Props) {
         className="flex-1 flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="px-5 py-3 border-b border-border/40 glass shrink-0 relative">
+        <div
+          className="px-5 py-3 shrink-0 relative"
+          style={{
+            background: 'rgba(255,255,255,0.90)',
+            backdropFilter: 'blur(14px)',
+            WebkitBackdropFilter: 'blur(14px)',
+            borderBottom: '1px solid rgba(40,55,44,0.12)',
+            boxShadow: '0 1px 0 rgba(255,255,255,0.8)',
+          }}
+        >
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2.5">
                 <div
                   className="w-2 h-2 rounded-full shadow-sm"
-                  style={{ backgroundColor: brand?.color ?? '#96B2B2' }}
+                  style={{ backgroundColor: brand?.color ?? '#024C27' }}
                 />
-                <span className="font-semibold text-[15px] text-foreground">
+                <span
+                  className="text-[14px] uppercase tracking-[1px]"
+                  style={{ fontFamily: "'Trajan Pro', Georgia, serif", color: '#024C27', fontWeight: 700 }}
+                >
                   {conversation.contact_name ?? 'Unknown'}
                 </span>
                 <ResponseTimer waitingSince={conversation.waiting_since} />
@@ -81,7 +94,7 @@ export function ThreadPane({ conversationId, onConversationClosed }: Props) {
               <div className="flex items-center gap-2 pl-4">
                 <span
                   className="text-[11px] font-medium px-2 py-0.5 rounded-full text-white"
-                  style={{ backgroundColor: brand?.color ?? '#96B2B2' }}
+                  style={{ backgroundColor: brand?.color ?? '#024C27' }}
                 >
                   {brand?.name?.replace('Carisma ', '') ?? conversation.brand_id}
                 </span>
@@ -91,7 +104,14 @@ export function ThreadPane({ conversationId, onConversationClosed }: Props) {
                   </span>
                   {CHANNEL_LABELS[conversation.channel as Channel]}
                 </span>
-                <span className={cn('text-[11px] font-medium px-2 py-0.5 rounded-full capitalize', STATUS_STYLE[statusKey] ?? STATUS_STYLE.open)}>
+                <span
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-full capitalize uppercase"
+                  style={{
+                    ...((STATUS_STYLE as Record<string, { background: string; color: string }>)[conversation.status] ?? STATUS_STYLE.open),
+                    fontFamily: "'Novecento Wide', sans-serif",
+                    letterSpacing: '0.8px',
+                  }}
+                >
                   {conversation.status}
                 </span>
               </div>
@@ -124,9 +144,17 @@ export function ThreadPane({ conversationId, onConversationClosed }: Props) {
             }}
           />
         ) : (
-          <div className="border-t border-border/30 glass px-6 py-4 flex items-center justify-center gap-2 text-muted-foreground/50">
-            <Lock className="w-3.5 h-3.5" />
-            <span className="text-[12px]">Conversation resolved</span>
+          <div
+            className="border-t px-6 py-4 flex items-center justify-center gap-2"
+            style={{ borderColor: 'rgba(40,55,44,0.10)', background: '#f7f9f6' }}
+          >
+            <Lock className="w-3.5 h-3.5" style={{ color: '#8eb093' }} />
+            <span
+              className="text-[11px] uppercase tracking-widest"
+              style={{ fontFamily: "'Novecento Wide', sans-serif", color: '#8eb093' }}
+            >
+              Conversation resolved
+            </span>
           </div>
         )}
       </motion.div>

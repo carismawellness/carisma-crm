@@ -22,9 +22,17 @@ export function MessageBubble({ message: msg }: Props) {
           className={cn(
             'px-4 py-2.5 text-[13px] leading-relaxed break-words',
             isOut
-              ? 'bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-700 dark:to-slate-800 text-white rounded-2xl rounded-tr-md shadow-md'
-              : 'bg-white/80 dark:bg-white/[0.08] text-foreground rounded-2xl rounded-tl-md shadow-sm border border-white/60 dark:border-white/10 backdrop-blur-sm'
+              ? 'text-white rounded-2xl rounded-tr-md shadow-md'
+              : 'text-foreground rounded-2xl rounded-tl-md'
           )}
+          style={isOut
+            ? { background: 'linear-gradient(135deg, #024C27 0%, #124E59 100%)' }
+            : {
+                background: 'rgba(255,255,255,0.95)',
+                border: '1px solid rgba(40,55,44,0.10)',
+                boxShadow: '0 2px 8px rgba(40,55,44,0.08)',
+              }
+          }
         >
           <p className="whitespace-pre-wrap">{msg.body}</p>
         </div>

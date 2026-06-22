@@ -82,7 +82,15 @@ export function ReplyBox({ conversationId, onSent, onClosed }: Props) {
   }
 
   return (
-    <div className="shrink-0 glass border-t border-border/40 p-4 space-y-3">
+    <div
+      className="shrink-0 p-4 space-y-3"
+      style={{
+        background: 'rgba(255,255,255,0.92)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderTop: '1px solid rgba(40,55,44,0.10)',
+      }}
+    >
       {showConfetti && <Confetti />}
       <AnimatePresence>
         {xpToast && <XPToast label={xpToast.label} xp={xpToast.xp} />}
@@ -91,10 +99,16 @@ export function ReplyBox({ conversationId, onSent, onClosed }: Props) {
       {/* AI header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-md bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+          <div
+            className="w-5 h-5 rounded-md flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #4f7256 0%, #024C27 100%)' }}
+          >
             <Sparkles className="w-2.5 h-2.5 text-white" />
           </div>
-          <span className="text-[11px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+          <span
+            className="text-[10px] uppercase font-semibold"
+            style={{ fontFamily: "'Novecento Wide', sans-serif", letterSpacing: '1.5px', color: '#4f7256' }}
+          >
             AI Draft
           </span>
         </div>
@@ -136,7 +150,22 @@ export function ReplyBox({ conversationId, onSent, onClosed }: Props) {
             onClick={handleClose}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all border border-border/60"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all"
+            style={{
+              border: '1px solid rgba(79,114,86,0.4)',
+              color: '#4f7256',
+              fontFamily: "'Novecento Wide', sans-serif",
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+            }}
+            onMouseEnter={e => {
+              ;(e.currentTarget as HTMLElement).style.background = '#4f7256'
+              ;(e.currentTarget as HTMLElement).style.color = '#ffffff'
+            }}
+            onMouseLeave={e => {
+              ;(e.currentTarget as HTMLElement).style.background = 'transparent'
+              ;(e.currentTarget as HTMLElement).style.color = '#4f7256'
+            }}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
             Resolve
@@ -147,15 +176,14 @@ export function ReplyBox({ conversationId, onSent, onClosed }: Props) {
         <motion.button
           onClick={handleSend}
           disabled={sending || !draft.trim() || loadingDraft}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className={cn(
-            'flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all',
-            'bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-200 dark:to-white',
-            'text-white dark:text-slate-900',
-            'shadow-sm hover:shadow-md',
-            'disabled:opacity-40 disabled:cursor-not-allowed'
-          )}
+          whileHover={!sending && draft.trim() && !loadingDraft ? { scale: 1.02 } : undefined}
+          whileTap={!sending && draft.trim() && !loadingDraft ? { scale: 0.98 } : undefined}
+          className="cta-glow flex items-center gap-1.5 px-5 py-1.5 text-[11px] font-bold disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+          style={{
+            fontFamily: "'Novecento Wide', sans-serif",
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+          }}
         >
           <Send className="w-3.5 h-3.5" />
           {sending ? 'Sending' : 'Send'}

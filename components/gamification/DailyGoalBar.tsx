@@ -15,24 +15,30 @@ export function DailyGoalBar({ closed }: Props) {
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between items-center">
-        <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+        <span
+          className="flex items-center gap-1 text-[10px] uppercase"
+          style={{ fontFamily: "'Novecento Wide', sans-serif", letterSpacing: '2px', color: '#8eb093', fontWeight: 700 }}
+        >
           <Target className="w-3 h-3" />
           Daily goal
         </span>
-        <span className={`text-[11px] font-semibold ${done ? 'text-emerald-500' : 'text-muted-foreground/60'}`}>
+        <span
+          className="text-[11px] font-semibold"
+          style={{ color: done ? '#024C27' : '#8eb093', fontFamily: "'Novecento Wide', sans-serif" }}
+        >
           {closed}/{DAILY_GOAL_TARGET}
         </span>
       </div>
-      <div className="h-1.5 bg-foreground/8 rounded-full overflow-hidden">
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(40,55,44,0.10)' }}>
         <motion.div
           className="h-full rounded-full"
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+          transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
           style={{
             background: done
-              ? 'linear-gradient(90deg, #10b981, #059669)'
-              : 'linear-gradient(90deg, #96B2B2, #6391AB)',
+              ? 'linear-gradient(90deg, #024C27, #4f7256)'
+              : 'linear-gradient(90deg, #4f7256, #8eb093)',
           }}
         />
       </div>
