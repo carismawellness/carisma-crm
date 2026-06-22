@@ -1,6 +1,8 @@
 'use client'
 
 import { HOT_THRESHOLD_MS } from '@/lib/constants'
+import { Flame } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface Props {
   waitingSince: string | null
@@ -12,11 +14,12 @@ export function HotBadge({ waitingSince }: Props) {
   if (elapsed < HOT_THRESHOLD_MS) return null
 
   return (
-    <span
-      className="text-sm leading-none animate-pulse"
+    <motion.span
+      animate={{ scale: [1, 1.15, 1] }}
+      transition={{ repeat: Infinity, duration: 1.5 }}
       title="Waiting over 10 minutes"
     >
-      🔥
-    </span>
+      <Flame className="w-3.5 h-3.5 text-red-500 fill-red-400/40" />
+    </motion.span>
   )
 }
