@@ -52,7 +52,7 @@ export function Sidebar({
 
         {/* Channels section */}
         <section>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-2.5 mb-2">
+          <p className="eyebrow px-2.5 mb-1.5 opacity-60">
             Channels
           </p>
           <div className="space-y-0.5">
@@ -87,7 +87,7 @@ export function Sidebar({
 
         {/* Status section */}
         <section>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-2.5 mb-2">
+          <p className="eyebrow px-2.5 mb-1.5 opacity-60">
             Status
           </p>
           <div className="space-y-0.5">
