@@ -14,7 +14,7 @@ export default function InboxPage() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden bg-mesh-light dark:bg-mesh-dark">
       <TopNav
         selectedBrand={selectedBrand}
         onBrandChange={setSelectedBrand}
