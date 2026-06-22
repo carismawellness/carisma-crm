@@ -5,6 +5,7 @@ import { BRANDS } from '@/lib/constants'
 import type { BrandId } from '@/lib/constants'
 import { logout } from '@/app/(auth)/login/actions'
 import { Button } from '@/components/ui/button'
+import { StreakBadge } from '@/components/gamification/StreakBadge'
 
 interface Props {
   selectedBrand: BrandId | null
@@ -65,11 +66,7 @@ export function TopNav({ selectedBrand, onBrandChange }: Props) {
       </div>
 
       <div className="flex items-center gap-3">
-        {streak > 0 && (
-          <span className="text-sm font-medium text-orange-500">
-            🔥 {streak} day streak
-          </span>
-        )}
+        {streak > 0 && <StreakBadge streak={streak} />}
         {agentName && (
           <span className="text-sm text-gray-600">{agentName}</span>
         )}
