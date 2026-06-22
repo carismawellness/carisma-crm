@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { TopNav } from '@/components/inbox/TopNav'
 import { Sidebar } from '@/components/inbox/Sidebar'
 import { ConversationList } from '@/components/inbox/ConversationList'
+import { ThreadPane } from '@/components/inbox/ThreadPane'
 import type { BrandId, Channel } from '@/lib/constants'
 
 export default function InboxPage() {
@@ -34,12 +35,10 @@ export default function InboxPage() {
           selectedId={selectedConversationId}
           onSelect={setSelectedConversationId}
         />
-        {/* ThreadPane placeholder — replaced in Task 17 */}
-        <div className="flex-1 bg-gray-50 flex items-center justify-center text-gray-400 text-sm">
-          {selectedConversationId
-            ? 'Loading conversation...'
-            : 'Select a conversation to get started'}
-        </div>
+        <ThreadPane
+          conversationId={selectedConversationId}
+          onConversationClosed={() => setSelectedConversationId(null)}
+        />
       </div>
     </div>
   )
