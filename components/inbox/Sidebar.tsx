@@ -20,15 +20,9 @@ interface Props {
 }
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
-  open: <Circle className="w-3 h-3" />,
-  pending: <Clock className="w-3 h-3" />,
-  closed: <CheckCircle2 className="w-3 h-3" />,
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  open: 'text-emerald-500',
-  pending: 'text-amber-500',
-  closed: 'text-muted-foreground',
+  open: <Circle className="w-3 h-3" style={{ color: '#4f7256' }} />,
+  pending: <Clock className="w-3 h-3" style={{ color: '#978063' }} />,
+  closed: <CheckCircle2 className="w-3 h-3" style={{ color: '#8eb093' }} />,
 }
 
 export function Sidebar({
@@ -47,21 +41,32 @@ export function Sidebar({
   }, [])
 
   return (
-    <aside className="w-52 flex flex-col shrink-0 border-r border-border/60 bg-background/80 backdrop-blur-xl overflow-hidden">
+    <aside
+      className="w-52 flex flex-col shrink-0 overflow-hidden"
+      style={{ borderRight: '1px solid rgba(40,55,44,0.10)', background: '#f7f9f6' }}
+    >
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-5 pt-4">
-
-        {/* Channels section */}
+        {/* Channels */}
         <section>
-          <p className="eyebrow px-2.5 mb-1.5 opacity-60">
-            Channels
-          </p>
+          <div className="px-2.5 mb-2">
+            <p
+              className="text-[10px] uppercase"
+              style={{ fontFamily: "'Novecento Wide', sans-serif", letterSpacing: '2.5px', color: '#8eb093', fontWeight: 700 }}
+            >
+              Channels
+            </p>
+            <div style={{ width: 28, height: 1, background: 'rgba(79,114,86,0.3)', marginTop: 4 }} />
+          </div>
           <div className="space-y-0.5">
             <NavItem
               active={selectedChannel === null}
               onClick={() => onChannelChange(null)}
               icon={
-                <span className="w-4 h-4 rounded-full bg-foreground/10 flex items-center justify-center text-[9px] font-bold text-foreground/40">
-                  ∞
+                <span
+                  className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-bold"
+                  style={{ background: 'rgba(2,76,39,0.10)', color: '#4f7256' }}
+                >
+                  ALL
                 </span>
               }
               label="All channels"
@@ -73,8 +78,8 @@ export function Sidebar({
                 onClick={() => onChannelChange(ch)}
                 icon={
                   <span
-                    className="w-4 h-4 rounded-md flex items-center justify-center [&>svg]:w-3 [&>svg]:h-3"
-                    style={{ backgroundColor: `${CHANNEL_ICON_COLORS[ch]}25` }}
+                    className="w-4 h-4 rounded flex items-center justify-center [&>svg]:w-2.5 [&>svg]:h-2.5"
+                    style={{ backgroundColor: `${CHANNEL_ICON_COLORS[ch]}20` }}
                   >
                     {CHANNEL_SVG_ICONS[ch]}
                   </span>
@@ -85,22 +90,24 @@ export function Sidebar({
           </div>
         </section>
 
-        {/* Status section */}
+        {/* Status */}
         <section>
-          <p className="eyebrow px-2.5 mb-1.5 opacity-60">
-            Status
-          </p>
+          <div className="px-2.5 mb-2">
+            <p
+              className="text-[10px] uppercase"
+              style={{ fontFamily: "'Novecento Wide', sans-serif", letterSpacing: '2.5px', color: '#8eb093', fontWeight: 700 }}
+            >
+              Status
+            </p>
+            <div style={{ width: 28, height: 1, background: 'rgba(79,114,86,0.3)', marginTop: 4 }} />
+          </div>
           <div className="space-y-0.5">
             {(['open', 'pending', 'closed'] as const).map(s => (
               <NavItem
                 key={s}
                 active={selectedStatus === s}
                 onClick={() => onStatusChange(s)}
-                icon={
-                  <span className={STATUS_COLORS[s]}>
-                    {STATUS_ICONS[s]}
-                  </span>
-                }
+                icon={<span className="shrink-0">{STATUS_ICONS[s]}</span>}
                 label={s.charAt(0).toUpperCase() + s.slice(1)}
               />
             ))}
@@ -109,7 +116,10 @@ export function Sidebar({
       </div>
 
       {/* Gamification footer */}
-      <div className="border-t border-border/50 p-3 space-y-4 bg-background/40">
+      <div
+        className="border-t p-3 space-y-4"
+        style={{ borderColor: 'rgba(40,55,44,0.10)', background: '#f2f6ef' }}
+      >
         <DailyGoalBar closed={dailyProgress.closed} />
         <Leaderboard />
       </div>
@@ -132,22 +142,28 @@ function NavItem({
     <motion.button
       onClick={onClick}
       whileHover={{ x: 1 }}
-      whileTap={{ scale: 0.98 }}
-      className={cn(
-        'w-full text-left px-2.5 py-1.5 rounded-xl flex items-center gap-2.5 text-[13px] transition-all duration-150',
+      whileTap={{ scale: 0.99 }}
+      className="w-full text-left px-2.5 py-1.5 rounded-xl flex items-center gap-2.5 text-[13px] transition-all duration-150 relative"
+      style={
         active
-          ? 'bg-foreground/[0.08] font-semibold text-foreground'
-          : 'text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground'
-      )}
+          ? { background: 'rgba(2,76,39,0.08)', color: '#024C27', fontWeight: 600 }
+          : { color: '#5a4f43' }
+      }
     >
-      <span className="shrink-0 w-4 h-4 flex items-center justify-center">{icon}</span>
-      <span className="truncate">{label}</span>
       {active && (
-        <motion.span
-          layoutId="sidebar-active-indicator"
-          className="ml-auto w-1 h-4 rounded-full bg-foreground/20"
+        <motion.div
+          layoutId="sidebar-active-bar"
+          className="absolute left-0 top-1.5 bottom-1.5 rounded-r-full"
+          style={{ width: 2.5, background: '#024C27' }}
         />
       )}
+      <span className="shrink-0 w-4 h-4 flex items-center justify-center ml-1">{icon}</span>
+      <span
+        className="truncate"
+        style={{ fontFamily: "'Novecento Wide', sans-serif", letterSpacing: '0.5px', fontSize: '11.5px', textTransform: 'uppercase' }}
+      >
+        {label}
+      </span>
     </motion.button>
   )
 }

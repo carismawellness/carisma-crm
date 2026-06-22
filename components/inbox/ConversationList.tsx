@@ -17,16 +17,19 @@ interface Props {
 
 function SkeletonRow() {
   return (
-    <div className="px-4 py-3 border-b border-border/40 animate-pulse">
+    <div
+      className="px-4 py-3 animate-pulse"
+      style={{ borderBottom: '1px solid rgba(40,55,44,0.08)' }}
+    >
       <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-full bg-foreground/8 shrink-0" />
+        <div className="w-9 h-9 rounded-full shrink-0" style={{ background: 'rgba(79,114,86,0.12)' }} />
         <div className="flex-1 space-y-2 pt-0.5">
           <div className="flex justify-between">
-            <div className="h-3 w-28 bg-foreground/8 rounded-full" />
-            <div className="h-3 w-10 bg-foreground/6 rounded-full" />
+            <div className="h-3 w-28 rounded-full" style={{ background: 'rgba(79,114,86,0.10)' }} />
+            <div className="h-3 w-10 rounded-full" style={{ background: 'rgba(79,114,86,0.07)' }} />
           </div>
-          <div className="h-2.5 w-40 bg-foreground/6 rounded-full" />
-          <div className="h-2 w-16 bg-foreground/5 rounded-full" />
+          <div className="h-2.5 w-40 rounded-full" style={{ background: 'rgba(79,114,86,0.07)' }} />
+          <div className="h-2 w-16 rounded-full" style={{ background: 'rgba(79,114,86,0.05)' }} />
         </div>
       </div>
     </div>
@@ -50,25 +53,45 @@ export function ConversationList({
     : conversations
 
   return (
-    <div className="w-80 flex flex-col shrink-0 border-r border-border/60 bg-background/60 backdrop-blur-lg overflow-hidden">
+    <div
+      className="w-80 flex flex-col shrink-0 overflow-hidden"
+      style={{ borderRight: '1px solid rgba(40,55,44,0.10)', background: '#fafaf8' }}
+    >
       {/* Search */}
-      <div className="px-3 py-2.5 border-b border-border/40 shrink-0">
+      <div
+        className="px-3 py-2.5 shrink-0"
+        style={{ borderBottom: '1px solid rgba(40,55,44,0.10)' }}
+      >
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 pointer-events-none" />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
+            style={{ color: '#8eb093' }}
+          />
           <input
             type="search"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search conversations..."
-            className="w-full text-[13px] bg-foreground/5 dark:bg-white/5 rounded-xl pl-8 pr-3 py-2 outline-none focus:ring-1 focus:ring-foreground/20 transition-all placeholder:text-muted-foreground/40 text-foreground"
+            className="w-full text-[13px] rounded-xl pl-8 pr-3 py-2 outline-none transition-all"
+            style={{
+              background: 'rgba(40,55,44,0.05)',
+              color: '#5a4f43',
+              border: '1px solid rgba(40,55,44,0.10)',
+            }}
           />
         </div>
       </div>
 
       {/* Count badge */}
       {!loading && filtered.length > 0 && (
-        <div className="px-4 py-1.5 border-b border-border/30 shrink-0">
-          <span className="text-[11px] text-muted-foreground/50 font-medium">
+        <div
+          className="px-4 py-1.5 shrink-0"
+          style={{ borderBottom: '1px solid rgba(40,55,44,0.06)' }}
+        >
+          <span
+            className="text-[10px] uppercase font-bold"
+            style={{ fontFamily: "'Novecento Wide', sans-serif", letterSpacing: '1.5px', color: '#8eb093' }}
+          >
             {filtered.length} conversation{filtered.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -80,14 +103,20 @@ export function ConversationList({
           Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 gap-3 text-center px-6">
-            <div className="w-10 h-10 rounded-2xl bg-foreground/5 flex items-center justify-center">
-              <Search className="w-5 h-5 text-muted-foreground/30" />
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center"
+              style={{ background: 'rgba(2,76,39,0.06)' }}
+            >
+              <Search className="w-5 h-5" style={{ color: '#8eb093' }} />
             </div>
             <div className="space-y-1">
-              <p className="text-[13px] font-medium text-foreground/40">
+              <p
+                className="text-[12px] uppercase font-bold"
+                style={{ fontFamily: "'Novecento Wide', sans-serif", letterSpacing: '1.5px', color: '#8eb093' }}
+              >
                 {search ? 'No results' : 'No conversations'}
               </p>
-              <p className="text-[11px] text-muted-foreground/30">
+              <p className="text-[11px]" style={{ color: '#8eb093' }}>
                 {search ? 'Try a different search' : 'Waiting for messages...'}
               </p>
             </div>
