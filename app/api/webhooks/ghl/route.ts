@@ -5,6 +5,16 @@ import type { GhlWebhookPayload } from '@/lib/ghl/normalizer'
 
 export async function POST(req: NextRequest) {
   try {
+    // GHL sends a webhook-secret header — verify it if set
+    const secret = process.env.GHL_WEBHOOK_SECRET
+    if (secret && secret !== 'placeholder') {
+      const incoming = req.headers.get('x-webhook-secret') ?? req.headers.get('x-ghl-signature') ?? ''
+      if (incoming !== secret) {
+        console.warn('GHL webhook: invalid secret')
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    }
+
     const payload: GhlWebhookPayload = await req.json()
 
     // Only process inbound messages

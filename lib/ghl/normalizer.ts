@@ -19,8 +19,9 @@ export interface GhlWebhookPayload {
 export function resolveChannelFromGhl(messageType: string | undefined): Channel {
   if (!messageType) return 'whatsapp'
   const t = messageType.toLowerCase()
-  if (t.includes('instagram') || t === 'ig') return 'instagram'
-  if (t.includes('facebook') || t === 'fb') return 'facebook'
+  if (t.includes('instagram') || t === 'ig' || t === 'type_instagram') return 'instagram'
+  if (t.includes('facebook') || t === 'fb' || t === 'type_fb') return 'facebook'
+  if (t.includes('email') || t === 'type_email') return 'gmail'
   return 'whatsapp'
 }
 
