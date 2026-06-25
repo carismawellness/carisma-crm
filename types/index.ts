@@ -21,6 +21,7 @@ export interface Conversation {
   contact_identifier: string | null
   ghl_conversation_id: string | null
   gmail_thread_id: string | null
+  contact_id: string | null
   status: ConversationStatus
   unread_count: number
   last_message_at: string | null

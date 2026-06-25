@@ -1,18 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { AppShell } from '@/components/shell/AppShell'
 
-export default async function InboxLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  return (
-    <div className="h-screen flex flex-col overflow-hidden bg-mesh-light dark:bg-mesh-dark">
-      {children}
-    </div>
-  )
+  return <AppShell>{children}</AppShell>
 }
