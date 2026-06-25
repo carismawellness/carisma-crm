@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { awardXp } from '@/lib/leads/xp'
+import { ensureAgent } from '@/lib/agents/ensure'
 import { TASK_XP, LIGHTNING_THRESHOLD_MS } from '@/lib/constants'
 import type { LeadActivityType } from '@/types'
 
@@ -21,6 +22,7 @@ export async function POST(
   }
 
   const service = createServiceClient()
+  await ensureAgent(service, user)
 
   const { data: lead, error: leadError } = await service
     .from('crm_leads')

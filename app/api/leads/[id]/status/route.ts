@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getLeadProvider } from '@/lib/leads/provider'
 import { awardXp } from '@/lib/leads/xp'
+import { ensureAgent } from '@/lib/agents/ensure'
 import { TASK_XP } from '@/lib/constants'
 import type { BrandId } from '@/lib/constants'
 import type { LeadStatus } from '@/types'
@@ -23,6 +24,7 @@ export async function PATCH(
   }
 
   const service = createServiceClient()
+  await ensureAgent(service, user)
 
   const { data: lead, error: leadError } = await service
     .from('crm_leads')
