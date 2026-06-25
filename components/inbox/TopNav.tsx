@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { BRANDS } from '@/lib/constants'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { BRANDS, TASKS_ENABLED } from '@/lib/constants'
 import type { BrandId } from '@/lib/constants'
 import { logout } from '@/app/(auth)/login/actions'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { StreakBadge } from '@/components/gamification/StreakBadge'
-import { Leaf, LogOut } from 'lucide-react'
+import { Leaf, LogOut, MessageSquare, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 
@@ -18,6 +20,9 @@ interface Props {
 export function TopNav({ selectedBrand, onBrandChange }: Props) {
   const [agentName, setAgentName] = useState<string>('')
   const [streak, setStreak] = useState<number>(0)
+  const pathname = usePathname()
+  const onTasks = pathname?.startsWith('/tasks') ?? false
+  const brandQuery = selectedBrand ? `?brand=${selectedBrand}` : ''
 
   useEffect(() => {
     fetch('/api/agents/me')
@@ -56,6 +61,27 @@ export function TopNav({ selectedBrand, onBrandChange }: Props) {
             Carisma CRM
           </span>
         </div>
+
+        {/* Module switcher (Chat | Tasks) */}
+        {TASKS_ENABLED && (
+          <nav
+            className="flex items-center gap-1 p-1 rounded-full"
+            style={{ background: 'rgba(40,55,44,0.06)' }}
+          >
+            <ModuleTab
+              href={`/${brandQuery}`}
+              icon={<MessageSquare className="w-3 h-3" />}
+              label="Chat"
+              active={!onTasks}
+            />
+            <ModuleTab
+              href={`/tasks${brandQuery}`}
+              icon={<Target className="w-3 h-3" />}
+              label="Tasks"
+              active={onTasks}
+            />
+          </nav>
+        )}
 
         {/* Brand filter pills */}
         <nav
@@ -118,6 +144,48 @@ export function TopNav({ selectedBrand, onBrandChange }: Props) {
         )}
       </div>
     </header>
+  )
+}
+
+function ModuleTab({
+  href,
+  icon,
+  label,
+  active,
+}: {
+  href: string
+  icon: React.ReactNode
+  label: string
+  active: boolean
+}) {
+  return (
+    <Link href={href} prefetch>
+      <motion.span
+        whileHover={{ scale: 1.04 }}
+        whileTap={{ scale: 0.97 }}
+        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all duration-200"
+        style={
+          active
+            ? {
+                backgroundColor: '#024C27',
+                color: '#ffffff',
+                boxShadow: '0 2px 10px rgba(2,76,39,0.31)',
+                fontFamily: "'Novecento Wide', sans-serif",
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase',
+              }
+            : {
+                color: '#4f7256',
+                fontFamily: "'Novecento Wide', sans-serif",
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase',
+              }
+        }
+      >
+        {icon}
+        {label}
+      </motion.span>
+    </Link>
   )
 }
 

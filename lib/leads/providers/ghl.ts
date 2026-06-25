@@ -1,46 +1,91 @@
-import type { BrandId } from '@/lib/constants'
+import { BRANDS, type BrandId } from '@/lib/constants'
 import type { LeadStatus } from '@/types'
 import {
-  type LeadProvider,
-  type ProviderContact,
-  type ProviderLead,
-  type ProviderStage,
-  NotImplementedError,
+  assignGhlOpportunity,
+  fetchAllGhlOpportunities,
+  fetchGhlPipelines,
+  getGhlContact,
+  getGhlOpportunity,
+  updateGhlOpportunityStage,
+  updateGhlOpportunityStatus,
+} from '@/lib/ghl/opportunities'
+import {
+  mapGhlContactToProviderContact,
+  mapGhlOpportunityToProviderLead,
+  mapGhlStageToProviderStage,
+} from '../mapping'
+import type {
+  LeadProvider,
+  ProviderContact,
+  ProviderLead,
+  ProviderStage,
 } from '../provider'
 
 // ============================================================
 // GHL provider — the ONLY lead file permitted to import lib/ghl.
-// Wave 0: contract skeleton (throws). Wave 1 fills these in using the
-// GHL Opportunities/Pipelines/Contacts API and lib/leads/mapping.ts:
-//   stages:   GET /opportunities/pipelines?locationId={id}   (camelCase locationId)
+// Maps GHL Opportunities/Pipelines/Contacts onto the provider DTOs via
+// lib/leads/mapping.ts. Brand credentials come from BRANDS[brandId].
+//   stages:   GET /opportunities/pipelines?locationId={id}  (flattened)
 //   list:     GET /opportunities/search?location_id={id}
 //   detail:   GET /opportunities/{id}
 //   contact:  GET /contacts/{id}
-//   stage:    PUT /opportunities/{id}  { pipelineStageId }
+//   stage:    PUT /opportunities/{id}  { pipelineId, pipelineStageId }
 //   status:   PUT /opportunities/{id}/status  { status }
 //   assign:   PUT /opportunities/{id}  { assignedTo }
-// All GHL request/response shapes map to the DTOs above at THIS boundary.
 // ============================================================
+
+function creds(brandId: BrandId): { apiKey: string; locationId: string } {
+  const brand = BRANDS[brandId]
+  return { apiKey: brand.ghlApiKey, locationId: brand.ghlLocationId }
+}
+
 export class GhlLeadProvider implements LeadProvider {
-  async listPipelineStages(_brandId: BrandId): Promise<ProviderStage[]> {
-    throw new NotImplementedError('listPipelineStages')
+  async listPipelineStages(brandId: BrandId): Promise<ProviderStage[]> {
+    const { apiKey, locationId } = creds(brandId)
+    const pipelines = await fetchGhlPipelines(apiKey, locationId)
+    // A location has multiple pipelines; flatten every pipeline's stages.
+    return pipelines.flatMap((pipeline) =>
+      pipeline.stages.map((stage) =>
+        mapGhlStageToProviderStage(stage, pipeline.id, brandId)
+      )
+    )
   }
-  async listLeads(_brandId: BrandId, _opts?: { status?: LeadStatus }): Promise<ProviderLead[]> {
-    throw new NotImplementedError('listLeads')
+
+  async listLeads(brandId: BrandId, opts?: { status?: LeadStatus }): Promise<ProviderLead[]> {
+    const { apiKey, locationId } = creds(brandId)
+    const opportunities = await fetchAllGhlOpportunities(apiKey, locationId, {
+      status: opts?.status,
+    })
+    return opportunities.map((opp) => mapGhlOpportunityToProviderLead(opp, brandId))
   }
-  async getLead(_brandId: BrandId, _externalId: string): Promise<ProviderLead | null> {
-    throw new NotImplementedError('getLead')
+
+  async getLead(brandId: BrandId, externalId: string): Promise<ProviderLead | null> {
+    const { apiKey } = creds(brandId)
+    const opp = await getGhlOpportunity(apiKey, externalId)
+    return opp ? mapGhlOpportunityToProviderLead(opp, brandId) : null
   }
-  async getContact(_brandId: BrandId, _contactExternalId: string): Promise<ProviderContact | null> {
-    throw new NotImplementedError('getContact')
+
+  async getContact(brandId: BrandId, contactExternalId: string): Promise<ProviderContact | null> {
+    const { apiKey } = creds(brandId)
+    const contact = await getGhlContact(apiKey, contactExternalId)
+    return contact ? mapGhlContactToProviderContact(contact, brandId) : null
   }
-  async advanceStage(_brandId: BrandId, _externalId: string, _stageExternalId: string): Promise<void> {
-    throw new NotImplementedError('advanceStage')
+
+  async advanceStage(brandId: BrandId, externalId: string, stageExternalId: string): Promise<void> {
+    const { apiKey } = creds(brandId)
+    // GHL's stage update requires the owning pipelineId; fetch the opp first.
+    const opp = await getGhlOpportunity(apiKey, externalId)
+    if (!opp) throw new Error(`GHL opportunity ${externalId} not found`)
+    await updateGhlOpportunityStage(apiKey, externalId, opp.pipelineId, stageExternalId)
   }
-  async setStatus(_brandId: BrandId, _externalId: string, _status: LeadStatus): Promise<void> {
-    throw new NotImplementedError('setStatus')
+
+  async setStatus(brandId: BrandId, externalId: string, status: LeadStatus): Promise<void> {
+    const { apiKey } = creds(brandId)
+    await updateGhlOpportunityStatus(apiKey, externalId, status)
   }
-  async assign(_brandId: BrandId, _externalId: string, _providerUserId: string): Promise<void> {
-    throw new NotImplementedError('assign')
+
+  async assign(brandId: BrandId, externalId: string, providerUserId: string): Promise<void> {
+    const { apiKey } = creds(brandId)
+    await assignGhlOpportunity(apiKey, externalId, providerUserId)
   }
 }
