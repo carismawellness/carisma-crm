@@ -63,12 +63,36 @@ export async function GET(req: NextRequest) {
           const nowIso = new Date().toISOString()
           const channel = resolveChannelFromGhl(conv.lastMessageType)
 
+          // Unified contact: upsert the GHL contact into crm_contacts (same rows
+          // the Tasks/leads module uses) so this conversation links to the
+          // person, enabling the Chat<->Tasks cross-link. Keyed on (provider, external_id).
+          let contactId: string | null = null
+          if (conv.contactId) {
+            const { data: contactRow } = await supabase
+              .from('crm_contacts')
+              .upsert(
+                {
+                  provider: 'ghl',
+                  external_id: conv.contactId,
+                  brand_id: brand.id,
+                  name: conv.fullName ?? conv.contactName ?? null,
+                  phone: conv.phone ?? null,
+                  email: conv.email ?? null,
+                },
+                { onConflict: 'provider,external_id', ignoreDuplicates: false }
+              )
+              .select('id')
+              .single()
+            contactId = contactRow?.id ?? null
+          }
+
           // Upsert conversation — only update waiting_since if there are unread inbound messages
           const updatePayload: Record<string, unknown> = {
             brand_id: brand.id,
             channel,
             contact_name: conv.fullName ?? conv.contactName ?? 'Unknown',
             contact_identifier: conv.phone ?? conv.email ?? conv.contactId,
+            contact_id: contactId,
             ghl_conversation_id: conv.id,
             last_message_at: conv.lastMessageDate
               ? new Date(conv.lastMessageDate).toISOString()
