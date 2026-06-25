@@ -183,22 +183,109 @@ export async function syncBrandLeads(
 ): Promise<number> {
   const provider = getLeadProvider(brandId)
 
+  const service = createServiceClient()
+
   let items = await provider.listLeadsWithContacts(brandId, { status: opts?.status })
   if (opts?.max != null && items.length > opts.max) {
     items = items.slice(0, opts.max)
   }
+  if (items.length === 0) return 0
 
-  // Prefetch the brand's stages once (external_id -> uuid) so each lead upsert
-  // skips a stage lookup round trip.
   const stageIdByExternal = await loadStageMap(brandId)
 
-  let count = 0
+  // 1) Batch-upsert contacts (deduped by external_id) -> external_id -> uuid map.
+  const contactRowsByExt = new Map<string, Record<string, unknown>>()
   for (const { lead, contact } of items) {
-    await upsertLeadFromProvider(brandId, lead, contact, stageIdByExternal)
-    count++
+    const ext = contact?.externalId ?? lead.contactExternalId
+    if (!ext || contactRowsByExt.has(ext)) continue
+    contactRowsByExt.set(ext, {
+      provider: PROVIDER,
+      external_id: ext,
+      brand_id: brandId,
+      name: contact?.name ?? null,
+      phone: contact?.phone ?? null,
+      email: contact?.email ?? null,
+      source: contact?.source ?? null,
+      tags: contact?.tags ?? [],
+    })
   }
+  const contactIdByExt = new Map<string, string>()
+  await inChunks([...contactRowsByExt.values()], 500, async (chunk) => {
+    const { data, error } = await service
+      .from('crm_contacts')
+      .upsert(chunk, { onConflict: 'provider,external_id' })
+      .select('id, external_id')
+    if (error) throw error
+    for (const r of data ?? []) contactIdByExt.set(r.external_id as string, r.id as string)
+  })
+
+  // 2) Prefetch existing leads to preserve agent-set fields across syncs.
+  const existingByExt = new Map<
+    string,
+    { first_contacted_at: string | null; last_activity_at: string | null; assigned_agent_id: string | null }
+  >()
+  await inChunks(items.map((it) => it.lead.externalId), 500, async (chunk) => {
+    const { data } = await service
+      .from('crm_leads')
+      .select('external_id, first_contacted_at, last_activity_at, assigned_agent_id')
+      .eq('provider', PROVIDER)
+      .in('external_id', chunk)
+    for (const r of data ?? []) existingByExt.set(r.external_id, r)
+  })
+
+  // 3) Build + batch-upsert lead rows.
+  const now = new Date().toISOString()
+  const leadRows = items.map(({ lead }) => {
+    const existing = existingByExt.get(lead.externalId)
+    const slaDueAt = computeSlaDueAt(lead.externalCreatedAt)
+    const firstContactedAt = existing?.first_contacted_at ?? null
+    return {
+      provider: PROVIDER,
+      external_id: lead.externalId,
+      brand_id: brandId,
+      contact_id: lead.contactExternalId ? contactIdByExt.get(lead.contactExternalId) ?? null : null,
+      name: lead.name,
+      monetary_value: lead.monetaryValue,
+      status: lead.status,
+      stage_id: lead.stageExternalId ? stageIdByExternal.get(lead.stageExternalId) ?? null : null,
+      source: lead.source,
+      assigned_agent_id: existing?.assigned_agent_id ?? null,
+      lead_score: computeLeadScore({
+        monetaryValue: lead.monetaryValue,
+        slaDueAt,
+        firstContactedAt,
+        externalCreatedAt: lead.externalCreatedAt,
+        status: lead.status,
+      }),
+      sla_due_at: slaDueAt,
+      external_created_at: lead.externalCreatedAt,
+      first_contacted_at: firstContactedAt,
+      last_activity_at: existing?.last_activity_at ?? null,
+      updated_at: now,
+    }
+  })
+
+  let count = 0
+  await inChunks(leadRows, 500, async (chunk) => {
+    const { error } = await service
+      .from('crm_leads')
+      .upsert(chunk, { onConflict: 'provider,external_id' })
+    if (error) throw error
+    count += chunk.length
+  })
 
   return count
+}
+
+/** Run an async op over an array in fixed-size chunks. */
+async function inChunks<T>(
+  arr: T[],
+  size: number,
+  fn: (chunk: T[]) => Promise<void>
+): Promise<void> {
+  for (let i = 0; i < arr.length; i += size) {
+    await fn(arr.slice(i, i + size))
+  }
 }
 
 /** Build a map of stage external_id -> mirror uuid for a brand. */
