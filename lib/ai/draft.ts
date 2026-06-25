@@ -22,7 +22,7 @@ Sign off naturally — don't force a signature on every message.`,
 }
 
 export async function generateDraft(
-  messages: Message[],
+  messages: Pick<Message, 'direction' | 'body'>[],
   brandId: BrandId
 ): Promise<string> {
   const systemPrompt = BRAND_SYSTEM_PROMPTS[brandId]
