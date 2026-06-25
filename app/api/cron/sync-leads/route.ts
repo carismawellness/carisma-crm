@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { BRANDS, type BrandId } from '@/lib/constants'
 import { syncBrandStages, syncBrandLeads } from '@/lib/leads/sync'
 
+// Lead sync does many sequential mirror upserts; give it headroom beyond the
+// default function timeout so a full cron pass commits without being killed.
+export const maxDuration = 60
+
 // Serverless time guards: cap leads per brand on the normal cron path;
 // ?bulk=true lifts the cap for a full reseed.
 const MAX_LEADS_PER_BRAND = 200

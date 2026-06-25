@@ -99,12 +99,17 @@ async function resolveStageId(stageExternalId: string | null): Promise<string | 
 export async function upsertLeadFromProvider(
   brandId: BrandId,
   dto: ProviderLead,
-  contactDto: ProviderContact | null
+  contactDto: ProviderContact | null,
+  // Optional prefetched stage map (external_id -> uuid) to skip a per-lead
+  // DB round trip during bulk sync. Falls back to a direct lookup.
+  stageIdByExternal?: Map<string, string>
 ): Promise<string> {
   const service = createServiceClient()
 
   const contactId = await resolveContactId(brandId, dto.contactExternalId, contactDto)
-  const stageId = await resolveStageId(dto.stageExternalId)
+  const stageId = dto.stageExternalId
+    ? stageIdByExternal?.get(dto.stageExternalId) ?? (await resolveStageId(dto.stageExternalId))
+    : null
 
   const slaDueAt = computeSlaDueAt(dto.externalCreatedAt)
 
@@ -183,11 +188,28 @@ export async function syncBrandLeads(
     items = items.slice(0, opts.max)
   }
 
+  // Prefetch the brand's stages once (external_id -> uuid) so each lead upsert
+  // skips a stage lookup round trip.
+  const stageIdByExternal = await loadStageMap(brandId)
+
   let count = 0
   for (const { lead, contact } of items) {
-    await upsertLeadFromProvider(brandId, lead, contact)
+    await upsertLeadFromProvider(brandId, lead, contact, stageIdByExternal)
     count++
   }
 
   return count
+}
+
+/** Build a map of stage external_id -> mirror uuid for a brand. */
+async function loadStageMap(brandId: BrandId): Promise<Map<string, string>> {
+  const service = createServiceClient()
+  const { data } = await service
+    .from('crm_pipeline_stages')
+    .select('id, external_id')
+    .eq('provider', PROVIDER)
+    .eq('brand_id', brandId)
+  const map = new Map<string, string>()
+  for (const row of data ?? []) map.set(row.external_id, row.id)
+  return map
 }
