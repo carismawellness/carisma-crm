@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   if (!conv) return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
 
   // Fetch last 10 messages live from GHL for context
-  let messages: Record<string, unknown>[] = []
+  let messages: { direction: 'inbound' | 'outbound'; body: string }[] = []
   const apiKey = BRAND_KEYS[conv.brand_id]
   if (apiKey && conv.ghl_conversation_id) {
     try {
