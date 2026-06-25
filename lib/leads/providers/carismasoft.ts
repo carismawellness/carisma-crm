@@ -4,6 +4,7 @@ import {
   type LeadProvider,
   type ProviderContact,
   type ProviderLead,
+  type ProviderLeadWithContact,
   type ProviderStage,
   NotImplementedError,
 } from '../provider'
@@ -25,6 +26,12 @@ export class CarismaSoftLeadProvider implements LeadProvider {
   }
   async listLeads(_brandId: BrandId, _opts?: { status?: LeadStatus }): Promise<ProviderLead[]> {
     throw new NotImplementedError('listLeads')
+  }
+  async listLeadsWithContacts(
+    _brandId: BrandId,
+    _opts?: { status?: LeadStatus }
+  ): Promise<ProviderLeadWithContact[]> {
+    throw new NotImplementedError('listLeadsWithContacts')
   }
   async getLead(_brandId: BrandId, _externalId: string): Promise<ProviderLead | null> {
     throw new NotImplementedError('getLead')

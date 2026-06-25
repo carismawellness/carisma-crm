@@ -11,12 +11,11 @@ import type { ProviderContact, ProviderLead } from '@/lib/leads/provider'
 // getLeadProvider(brandId) so GHL never leaks into this file; the
 // provider already returns provider-agnostic DTOs.
 //
-// Contact strategy: listLeads() returns ProviderLead[] only — the
-// embedded contact is dropped at the provider boundary. syncBrandLeads
-// therefore lazily hydrates each lead's contact via provider.getContact
-// (memoised per run). upsertLeadFromProvider accepts an optional
-// pre-fetched contactDto; when null it writes a minimal contact row keyed
-// on contactExternalId, which webhooks / lead-detail later enrich.
+// Contact strategy: syncBrandLeads uses provider.listLeadsWithContacts so
+// the contact arrives embedded with each lead — no per-contact round trips.
+// upsertLeadFromProvider still accepts an optional contactDto; when null
+// (e.g. the webhook fast-path without an embedded contact) it writes a
+// minimal contact row keyed on contactExternalId, which later syncs enrich.
 // ============================================================
 
 const PROVIDER = 'ghl'
@@ -167,9 +166,11 @@ interface SyncLeadsOpts {
 }
 
 /**
- * List a brand's leads from the provider and mirror each into crm_leads,
- * hydrating contacts via provider.getContact (memoised per run). Returns
- * the number of leads upserted.
+ * List a brand's leads (with embedded contacts) from the provider and mirror
+ * each into crm_leads. Uses listLeadsWithContacts so there are NO per-contact
+ * round trips — the GHL opportunity search already embeds the contact, which
+ * keeps the cron well inside the serverless time budget. Returns the number
+ * of leads upserted.
  */
 export async function syncBrandLeads(
   brandId: BrandId,
@@ -177,31 +178,14 @@ export async function syncBrandLeads(
 ): Promise<number> {
   const provider = getLeadProvider(brandId)
 
-  let leads = await provider.listLeads(brandId, { status: opts?.status })
-  if (opts?.max != null && leads.length > opts.max) {
-    leads = leads.slice(0, opts.max)
+  let items = await provider.listLeadsWithContacts(brandId, { status: opts?.status })
+  if (opts?.max != null && items.length > opts.max) {
+    items = items.slice(0, opts.max)
   }
 
-  // Memoise contact hydration so repeated contactExternalIds fetch once.
-  const contactCache = new Map<string, ProviderContact | null>()
-
   let count = 0
-  for (const lead of leads) {
-    let contactDto: ProviderContact | null = null
-    const cid = lead.contactExternalId
-    if (cid) {
-      if (contactCache.has(cid)) {
-        contactDto = contactCache.get(cid) ?? null
-      } else {
-        try {
-          contactDto = await provider.getContact(brandId, cid)
-        } catch {
-          contactDto = null
-        }
-        contactCache.set(cid, contactDto)
-      }
-    }
-    await upsertLeadFromProvider(brandId, lead, contactDto)
+  for (const { lead, contact } of items) {
+    await upsertLeadFromProvider(brandId, lead, contact)
     count++
   }
 

@@ -48,11 +48,25 @@ export interface ProviderLead {
   externalCreatedAt: string | null
 }
 
+export interface ProviderLeadWithContact {
+  lead: ProviderLead
+  contact: ProviderContact | null
+}
+
 export interface LeadProvider {
   /** List the pipeline stages for a brand (mirrored on sync). */
   listPipelineStages(brandId: BrandId): Promise<ProviderStage[]>
   /** List leads/opportunities for a brand (mirrored on sync / backfill). */
   listLeads(brandId: BrandId, opts?: { status?: LeadStatus }): Promise<ProviderLead[]>
+  /**
+   * List leads WITH their contact in a single pass — no per-contact round
+   * trips. Providers whose list payload embeds the contact (GHL does)
+   * implement this efficiently; sync prefers it over listLeads + getContact.
+   */
+  listLeadsWithContacts(
+    brandId: BrandId,
+    opts?: { status?: LeadStatus }
+  ): Promise<ProviderLeadWithContact[]>
   /** Hydrate a single lead live from the source of truth. */
   getLead(brandId: BrandId, externalId: string): Promise<ProviderLead | null>
   /** Fetch a contact by external id (lazy hydrate on lead open). */

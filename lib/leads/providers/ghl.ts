@@ -11,6 +11,7 @@ import {
 } from '@/lib/ghl/opportunities'
 import {
   mapGhlContactToProviderContact,
+  mapGhlEmbeddedContactToProviderContact,
   mapGhlOpportunityToProviderLead,
   mapGhlStageToProviderStage,
 } from '../mapping'
@@ -18,6 +19,7 @@ import type {
   LeadProvider,
   ProviderContact,
   ProviderLead,
+  ProviderLeadWithContact,
   ProviderStage,
 } from '../provider'
 
@@ -57,6 +59,22 @@ export class GhlLeadProvider implements LeadProvider {
       status: opts?.status,
     })
     return opportunities.map((opp) => mapGhlOpportunityToProviderLead(opp, brandId))
+  }
+
+  async listLeadsWithContacts(
+    brandId: BrandId,
+    opts?: { status?: LeadStatus }
+  ): Promise<ProviderLeadWithContact[]> {
+    const { apiKey, locationId } = creds(brandId)
+    // The opportunity search embeds the contact, so one pass yields both —
+    // no per-contact round trips.
+    const opportunities = await fetchAllGhlOpportunities(apiKey, locationId, {
+      status: opts?.status,
+    })
+    return opportunities.map((opp) => ({
+      lead: mapGhlOpportunityToProviderLead(opp, brandId),
+      contact: mapGhlEmbeddedContactToProviderContact(opp, brandId),
+    }))
   }
 
   async getLead(brandId: BrandId, externalId: string): Promise<ProviderLead | null> {
